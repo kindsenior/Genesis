@@ -222,6 +222,11 @@ class Go2Env:
         self.episode_length_buf[envs_idx] = 0
         self.reset_buf[envs_idx] = True
 
+        # randomization
+        # self.randomize_link_properties()
+        # self.randomize_com_shift()
+        # self.randomize_friction()
+
         # fill extras
         self.extras["episode"] = {}
         for key in self.episode_sums.keys():
@@ -263,3 +268,21 @@ class Go2Env:
     def _reward_base_height(self):
         # Penalize base height away from target
         return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
+
+    # ------------ randomization ----------------
+    def randomize_link_properties(self):
+        # リンクごとの質量のスケール
+        mass_scale = 0.9 + 0.2 * torch.rand((self.robot.n_links,), device=self.device)  # 0.9〜1.1
+        self.robot.set_links_inertial_mass(mass_scale)
+
+    def randomize_com_shift(self):
+        # COMシフト
+        num_links = self.robot.n_links
+        link_indices = list(range(num_links))
+        com_shift = 0.01 * torch.randn((self.num_envs, num_links, 3), device=self.device)  # +-0.01m=+-10mm
+        self.robot.set_COM_shift(com_shift, link_indices)
+
+    def randomize_friction(self):
+        # 各リンクの摩擦係数
+        friction = 0.5 + torch.rand(1).item() # 0.5~1.5
+        self.robot.set_friction(friction)
