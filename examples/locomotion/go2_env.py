@@ -226,6 +226,8 @@ class Go2Env:
         # self.randomize_link_properties()
         # self.randomize_com_shift()
         # self.randomize_friction()
+        # self.randomize_pd_gains()
+        # self.randomize_armature()
 
         # fill extras
         self.extras["episode"] = {}
@@ -289,3 +291,22 @@ class Go2Env:
 
         self.robot.set_friction(friction)
         self.ground.set_friction(friction)
+
+    def randomize_pd_gains(self):
+        num_dofs = self.robot.n_dofs
+        # 例: PDゲインの範囲
+        kp_min, kp_max = 18.0, 30.0
+        kv_min, kv_max = 0.7, 1.2
+        # ランダムゲイン生成
+        kp = torch.rand(num_dofs, device=self.device) * (kp_max - kp_min) + kp_min
+        kv = torch.rand(num_dofs, device=self.device) * (kv_max - kv_min) + kv_min
+        # 設定
+        self.robot.set_dofs_kp(kp)
+        self.robot.set_dofs_kv(kv)
+
+    def randomize_armature(self):
+        # モータ慣性の範囲（例）
+        armature_min, armature_max = 0.01, 0.15
+        # ランダマイズ
+        armature = torch.rand(self.robot.n_dofs, device=self.device) * (armature_max - armature_min) + armature_min
+        self.robot.set_dofs_armature(armature)
