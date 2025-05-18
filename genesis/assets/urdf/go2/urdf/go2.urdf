@@ -259,9 +259,16 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.21 0" xyz="0.008 0 -0.06" />
+      <!-- <origin rpy="0 -0.21 0" xyz="0.008 0 -0.06" /> -->
+      <!-- <geometry> -->
+      <!--   <cylinder length="0.12" radius="0.012" /> -->
+      <!-- </geometry> -->
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
       <geometry>
-        <cylinder length="0.12" radius="0.012" />
+        <mesh
+          filename="../dae/calf.dae" />
       </geometry>
     </collision>
   </link>
@@ -518,9 +525,16 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.2 0" xyz="0.01 0 -0.06" />
+      <!-- <origin rpy="0 -0.2 0" xyz="0.01 0 -0.06" /> -->
+      <!-- <geometry> -->
+      <!--   <cylinder length="0.12" radius="0.013" /> -->
+      <!-- </geometry> -->
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
       <geometry>
-        <cylinder length="0.12" radius="0.013" />
+        <mesh
+          filename="../dae/calf_mirror.dae" />
       </geometry>
     </collision>
   </link>
@@ -777,9 +791,16 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.2 0" xyz="0.01 0 -0.06" />
+      <!--   <origin rpy="0 -0.2 0" xyz="0.01 0 -0.06" /> -->
+      <!--   <geometry> -->
+      <!--     <cylinder length="0.12" radius="0.013" /> -->
+      <!--   </geometry> -->
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
       <geometry>
-        <cylinder length="0.12" radius="0.013" />
+        <mesh
+          filename="../dae/calf.dae" />
       </geometry>
     </collision>
   </link>
@@ -1036,9 +1057,16 @@ Stephen Brawner (brawner@gmail.com)
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -0.2 0" xyz="0.01 0 -0.06" />
+      <!--   <origin rpy="0 -0.2 0" xyz="0.01 0 -0.06" /> -->
+      <!--   <geometry> -->
+      <!--     <cylinder length="0.12" radius="0.013" /> -->
+      <!--   </geometry> -->
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
       <geometry>
-        <cylinder length="0.12" radius="0.013" />
+        <mesh
+          filename="../dae/calf_mirror.dae" />
       </geometry>
     </collision>
   </link>
