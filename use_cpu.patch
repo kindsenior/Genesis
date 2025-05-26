@@ -1,17 +1,17 @@
 diff --git a/examples/locomotion/go2_eval.py b/examples/locomotion/go2_eval.py
-index 066d013..70cd620 100644
+index 32ee5ad..5ea904a 100644
 --- a/examples/locomotion/go2_eval.py
 +++ b/examples/locomotion/go2_eval.py
-@@ -16,7 +16,7 @@ def main():
+@@ -17,7 +17,7 @@ def main():
      parser.add_argument("--ckpt", type=int, default=100)
      args = parser.parse_args()
  
 -    gs.init()
 +    gs.init(backend=gs.cpu)
  
-     log_dir = f"{args.log_dir}/{args.exp_name}"
+     log_dir = f"{args.log_dir}/{args.exp_name}/{args.param_name}"
      env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg = pickle.load(open(f"{log_dir}/cfgs.pkl", "rb"))
-@@ -29,12 +29,13 @@ def main():
+@@ -30,12 +30,13 @@ def main():
          reward_cfg=reward_cfg,
          command_cfg=command_cfg,
          show_viewer=True,
@@ -28,19 +28,19 @@ index 066d013..70cd620 100644
      obs, _ = env.reset()
      with torch.no_grad():
 diff --git a/examples/locomotion/go2_train.py b/examples/locomotion/go2_train.py
-index 8ddef58..9799a0b 100644
+index 8715872..de38ac6 100644
 --- a/examples/locomotion/go2_train.py
 +++ b/examples/locomotion/go2_train.py
-@@ -144,7 +144,7 @@ def main():
+@@ -145,7 +145,7 @@ def main():
      parser.add_argument("--max_iterations", type=int, default=100)
      args = parser.parse_args()
  
 -    gs.init(logging_level="warning")
 +    gs.init(logging_level="warning", backend=gs.cpu)
  
-     log_dir = f"{args.log_dir}/{args.exp_name}"
+     log_dir = f"{args.log_dir}/{args.exp_name}/{args.param_name}"
      env_cfg, obs_cfg, reward_cfg, command_cfg = get_cfgs()
-@@ -157,10 +157,10 @@ def main():
+@@ -158,10 +158,10 @@ def main():
      os.makedirs(log_dir, exist_ok=True)
  
      env = Go2Env(
