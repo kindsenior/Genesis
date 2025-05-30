@@ -273,19 +273,19 @@ class Go2Env:
 
     # ------------ randomization ----------------
     def randomize_link_properties(self):
-        # リンクごとの質量のスケール
+        # scale mass of links
         mass_scale = 0.9 + 0.2 * torch.rand((self.robot.n_links,), device=self.device)  # 0.9〜1.1
         self.robot.set_links_inertial_mass(mass_scale)
 
     def randomize_com_shift(self):
-        # COMシフト
+        # shift COM positions
         num_links = self.robot.n_links
         link_indices = list(range(num_links))
         com_shift = 0.01 * torch.randn((self.num_envs, num_links, 3), device=self.device)  # +-0.01m=+-10mm
         self.robot.set_COM_shift(com_shift, link_indices)
 
     def randomize_friction(self):
-        # 各リンクの摩擦係数
+        # frictions between the ground and robots
         # friction = 0.5 + torch.rand(1).item() # 0.5~1.5
         friction = 0.2 + 1.6*torch.rand(1).item() # 0.2~1.8
 
@@ -293,20 +293,17 @@ class Go2Env:
         self.ground.set_friction(friction)
 
     def randomize_pd_gains(self):
+        # pd gains of the joint control
         num_dofs = self.robot.n_dofs
-        # 例: PDゲインの範囲
         kp_min, kp_max = 18.0, 30.0
         kv_min, kv_max = 0.7, 1.2
-        # ランダムゲイン生成
         kp = torch.rand(num_dofs, device=self.device) * (kp_max - kp_min) + kp_min
         kv = torch.rand(num_dofs, device=self.device) * (kv_max - kv_min) + kv_min
-        # 設定
         self.robot.set_dofs_kp(kp)
         self.robot.set_dofs_kv(kv)
 
     def randomize_armature(self):
-        # モータ慣性の範囲（例）
+        # joint's rotor inertia
         armature_min, armature_max = 0.01, 0.15
-        # ランダマイズ
         armature = torch.rand(self.robot.n_dofs, device=self.device) * (armature_max - armature_min) + armature_min
         self.robot.set_dofs_armature(armature)
