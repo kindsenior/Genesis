@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 import pickle
 import shutil
 from importlib import metadata
@@ -172,7 +173,10 @@ def main():
     parser.add_argument("-e", "--exp_name", type=str, default="go2-walking")
     parser.add_argument("-l", "--log_dir", type=str, default="logs")
     parser.add_argument("-B", "--num_envs", type=int, default=4096)
+    parser.add_argument("--ckpt", type=int, default=None)
     parser.add_argument("--max_iterations", type=int, default=101)
+    parser.add_argument("-r", "--resume", type=bool, default=False)
+    parser.add_argument("-rp", "--resume_path", type=str, default=None)
     args = parser.parse_args()
 
     gs.init(logging_level="warning")
@@ -195,6 +199,13 @@ def main():
     )
 
     runner = OnPolicyRunner(env, train_cfg, log_dir, device=gs.device)
+
+    # load a pretrained model and optimizer for resume
+    if args.resume:
+        # use parent path of log_dir as resume_path
+        resume_path = Path(log_dir).parent / f"model_{args.ckpt}.pt" if args.resume_path is None else args.resume_path
+        print(f"resume from {resume_path}")
+        runner.load(resume_path)
 
     runner.learn(num_learning_iterations=args.max_iterations, init_at_random_ep_len=True)
 
