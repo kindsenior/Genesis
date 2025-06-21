@@ -1,0 +1,13 @@
+diff --git a/rsl_rl/runners/on_policy_runner.py b/rsl_rl/runners/on_policy_runner.py
+index 1b24f67..8301774 100644
+--- a/rsl_rl/runners/on_policy_runner.py
++++ b/rsl_rl/runners/on_policy_runner.py
+@@ -379,7 +379,7 @@ class OnPolicyRunner:
+             self.writer.save_model(path, self.current_learning_iteration)
+ 
+     def load(self, path: str, load_optimizer: bool = True):
+-        loaded_dict = torch.load(path, weights_only=False)
++        loaded_dict = torch.load(path, weights_only=False, map_location=torch.device('cpu'))
+         # -- Load PPO model
+         self.alg.actor_critic.load_state_dict(loaded_dict["model_state_dict"])
+         # -- Load RND model if used
