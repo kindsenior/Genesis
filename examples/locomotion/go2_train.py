@@ -112,6 +112,28 @@ def get_cfgs():
         "action_scale": 0.25,
         "simulate_action_latency": True,
         "clip_actions": 100.0,
+        # terrain
+        "terrain": {
+            "n_subterrains": [5, 5],
+            "subterrain_size": [12.0, 12.0],
+            "horizontal_scale": 0.25,
+            "vertical_scale": 0.005,
+            "subterrain_types": [
+                # withoug slope and stair
+                ["flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain"],
+                ["flat_terrain","wave_terrain",           "random_uniform_terrain",     "discrete_obstacles_terrain", "flat_terrain"],
+                ["flat_terrain","pyramid_sloped_terrain", "flat_terrain",               "wave_terrain",               "flat_terrain"],
+                ["flat_terrain","random_uniform_terrain", "discrete_obstacles_terrain", "pyramid_sloped_terrain",     "flat_terrain"],
+                ["flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain"],
+                # # all flat terrain
+                # ["flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain"],
+                # ["flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain"],
+                # ["flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain"],
+                # ["flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain"],
+                # ["flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain", "flat_terrain"],
+            ],
+            "randomize": True,
+        },
     }
     obs_cfg = {
         "num_obs": 45,

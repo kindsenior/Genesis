@@ -49,7 +49,41 @@ class Go2Env:
         )
 
         # add ground
-        self.ground = self.scene.add_entity(gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True))
+        # ## flat plane
+        # self.ground = self.scene.add_entity(gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True))
+
+        ## terrain
+        terrain_cfg = env_cfg["terrain"]
+        subterrain_grids = torch.tensor(terrain_cfg["n_subterrains"], device=self.device) # subterrainの数
+        self.subterrain_size = torch.tensor(terrain_cfg["subterrain_size"], device=self.device)  # subterrainのサイズ
+        center_offset = - subterrain_grids * self.subterrain_size / 2
+        terrain = gs.morphs.Terrain(
+            pos=tuple(center_offset.cpu().tolist() + [0.0]),
+            n_subterrains=subterrain_grids.cpu().tolist(),
+            subterrain_size=self.subterrain_size.cpu().tolist(),
+            horizontal_scale=terrain_cfg["horizontal_scale"],
+            vertical_scale=terrain_cfg["vertical_scale"],
+            subterrain_types=terrain_cfg["subterrain_types"],
+            randomize=terrain_cfg["randomize"],
+        )
+        self.ground = self.scene.add_entity(terrain)
+
+        # height field for setting initial z positions matched to the ground heiht in reset_init_pos
+        if hasattr(self.ground, "terrain_hf"): # when using terrain
+            self.height_field = (
+                torch.from_numpy(self.ground.terrain_hf).float().to(self.device)
+                * terrain_cfg["vertical_scale"]
+                )
+        else: # generate pseudo height_field (all 0) when using plane
+            subterrain_grids = torch.tensor([5, 5], device=self.device)
+            self.subterrain_size = torch.tensor([12, 12], device=self.device)
+            center_offset = torch.tensor([0, 0], device=self.device)
+            dummy_heightmap_resolution = (512, 512)
+            self.height_field = torch.zeros(dummy_heightmap_resolution, device=self.device)
+        self.terrain_range = torch.stack([center_offset, center_offset + subterrain_grids * self.subterrain_size], axis=1)  # (2, 2) = [[x_min, x_max], [y_min, y_max]]
+        self.terrain_resolution = (self.terrain_range[:, 1] - self.terrain_range[:, 0]) / torch.tensor([self.height_field.shape[1], self.height_field.shape[0]], device=self.device)  # (2,) = [res_x, res_y]
+        print(f"terrain_range: {self.terrain_range}")
+        print(f"terrain_resolution: {self.terrain_resolution}")
 
         # add robot
         self.base_init_pos = torch.tensor(self.env_cfg["base_init_pos"], device=gs.device)
@@ -193,6 +227,38 @@ class Go2Env:
     def get_privileged_observations(self):
         return None
 
+    def reset_init_base(self, envs_idx):
+        N = envs_idx.shape[0]
+        margin = self.subterrain_size + 1.0
+
+        # generate random (x, y)
+        min_xy = self.terrain_range[:, 0] + margin
+        max_xy = self.terrain_range[:, 1] - margin
+        xy = gs_rand_float(min_xy, max_xy, (N, 2), self.device) # shape: (N, 2)
+
+        # convert (x,y) to (i, j): indices in height_field
+        ij = ((xy - self.terrain_range[:, 0]) / self.terrain_resolution).long()
+        ij[:, 0].clamp_(0, self.height_field.shape[0] - 1)  # j
+        ij[:, 1].clamp_(0, self.height_field.shape[1] - 1)  # i
+
+        # get z from height_field
+        zs = self.height_field[ij[:, 0], ij[:, 1]].to(self.device) + self.base_init_pos[2]  # (N,)
+
+        # set x,y and z to base_pos
+        self.base_pos[envs_idx, 0:2] = xy
+        self.base_pos[envs_idx, 2] = zs
+
+        # generate random yaw angle
+        yaw_angles = torch.rand(N, device=self.device) * 2 * math.pi # [0, 2pi)
+
+        # convert yaw to quaternion (x=0, y=0)
+        half_yaw = yaw_angles * 0.5
+        base_quat = torch.zeros((N, 4), device=self.device)
+        base_quat[:, 0] = torch.cos(half_yaw)  # w
+        base_quat[:, 3] = torch.sin(half_yaw)  # z
+
+        self.base_quat[envs_idx] = base_quat
+
     def reset_idx(self, envs_idx):
         if len(envs_idx) == 0:
             return
@@ -208,8 +274,7 @@ class Go2Env:
         )
 
         # reset base
-        self.base_pos[envs_idx] = self.base_init_pos
-        self.base_quat[envs_idx] = self.base_init_quat.reshape(1, -1)
+        self.reset_init_base(envs_idx)
         self.robot.set_pos(self.base_pos[envs_idx], zero_velocity=False, envs_idx=envs_idx)
         self.robot.set_quat(self.base_quat[envs_idx], zero_velocity=False, envs_idx=envs_idx)
         self.base_lin_vel[envs_idx] = 0
@@ -267,7 +332,15 @@ class Go2Env:
 
     def _reward_base_height(self):
         # Penalize base height away from target
-        return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
+        xy = self.base_pos[:,:2] # (num_envs, 2)
+
+        # convert (x,y) to (i, j): indices in height_field
+        ij = ((xy - self.terrain_range[:, 0]) / self.terrain_resolution).long()
+        ij[:, 0].clamp_(0, self.height_field.shape[0] - 1)  # i
+        ij[:, 1].clamp_(0, self.height_field.shape[1] - 1)  # j
+        target_height = self.height_field[ij[:, 0], ij[:, 1]] + self.reward_cfg["base_height_target"]
+
+        return torch.square(self.base_pos[:, 2] - target_height)
 
     # ------------ randomization ----------------
     def randomize_link_properties(self):
