@@ -59,7 +59,7 @@ def get_train_cfg(exp_name, max_iterations):
         },
         "runner_class_name": "OnPolicyRunner",
         "num_steps_per_env": 24,
-        "save_interval": 100,
+        "save_interval": 25,
         "empirical_normalization": None,
         "seed": 1,
     }
@@ -183,6 +183,7 @@ def main():
 
     log_dir = f"{args.log_dir}/{args.exp_name}"
     env_cfg, obs_cfg, reward_cfg, command_cfg = get_cfgs()
+    args.max_iterations = args.max_iterations + 1
     train_cfg = get_train_cfg(args.exp_name, args.max_iterations)
 
     if os.path.exists(log_dir):
