@@ -48,6 +48,8 @@ class build_ext(_build_ext):
 
 
 setup(
+    name="genesis-world",
+    version="0.2.1+1f2a136",
     # Build cython modules
     cmdclass={"build_ext": build_ext},
     ext_modules=[
